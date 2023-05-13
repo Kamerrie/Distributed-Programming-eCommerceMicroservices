@@ -1,14 +1,17 @@
 ﻿using FirebaseAdmin.Messaging;
 using Google.Cloud.Firestore;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace CustomerMicroservice.Models
 {
     [FirestoreData]
-    public class User
+    public class Customer
     {
         [FirestoreProperty]
-        public string UserId { get; set; }
+        [Required]
+        public string CustomerId { get; set; } = Guid.NewGuid().ToString();
 
         [FirestoreProperty]
         public string Email { get; set; }

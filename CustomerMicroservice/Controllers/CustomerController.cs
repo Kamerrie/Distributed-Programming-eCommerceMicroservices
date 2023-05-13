@@ -1,11 +1,10 @@
-﻿using FirebaseAdmin;
-using FirebaseAdmin.Auth;
-using Google.Apis.Auth.OAuth2;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 using CustomerMicroservice.Models;
+using Grpc.Auth;
+using System.Collections.Generic;
 
 namespace CustomerMicroservice.Controllers
 {
@@ -13,88 +12,96 @@ namespace CustomerMicroservice.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private readonly FirebaseAuth _auth;
-        private readonly FirebaseClient _client;
+        private readonly FirestoreDb _db;
 
-        public CustomerController()
+        public CustomerController(FirestoreDb db)
         {
-            FirebaseApp.Create(new AppOptions()
-            {
-                Credential = GoogleCredential.FromFile("path/to/your/firebase/credentials.json"),
-            });
-
-            _auth = FirebaseAuth.DefaultInstance;
-            _client = new FirebaseClient("https://your-database-url.firebaseio.com/");
+            _db = db;
         }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(User user)
+        [HttpPost]
+        public async Task<IActionResult> Create(Customer customer)
         {
-            var userRecordArgs = new UserRecordArgs()
-            {
-                Email = user.Email,
-                EmailVerified = false,
-                Password = user.Password,
-                Disabled = false,
-            };
-
-            UserRecord userRecord = await _auth.CreateUserAsync(userRecordArgs);
-            user.UserId = userRecord.Uid;
-
-            // Save userRecord to your database
-            var userToAdd = new User()
-            {
-                UserId = userRecord.Uid,
-                Email = user.Email,
-                Password = user.Password,
-                Notifications = new List<Notification>()
-            };
-
-            await _client
-                .Child("Users")
-                .PostAsync(userToAdd);
-
-            return Ok(userRecord);
+            DocumentReference docRef = _db.Collection("Customers").Document(customer.CustomerId);
+            await docRef.SetAsync(customer);
+            return Ok();
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login([FromBody] Customer customer)
         {
-            // Check user credentials against your database and issue a token if they're valid
-            User user = await _client
-                .Child("Users")
-                .OnceSingleAsync<User>();
+            // Query the Firestore database for a User document where 'Email' equals 'loginUser.Email' and 'Password' equals 'loginUser.Password'
+            Query query = _db.Collection("Customers")
+                .WhereEqualTo("Email", customer.Email)
+                .WhereEqualTo("Password", customer.Password);
+            QuerySnapshot querySnapshot = await query.GetSnapshotAsync();
 
-            if (user.Email == email && user.Password == password)
+            // If the snapshot contains any documents, that means a User with the provided email and password was found
+            if (querySnapshot.Count > 0)
             {
-                // User credentials are valid, issue a token
-                return Ok(new { token = "some token" });
+                return Ok(true);
             }
 
-            return Unauthorized();
+            // If no documents were found, return false
+            return Ok(false);
         }
 
-        [HttpGet("notifications/{userId}")]
-        public async Task<IActionResult> GetNotifications(string userId)
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(string id)
         {
-            User user = await _client
-                .Child("Users")
-                .Child(userId)
-                .OnceSingleAsync<User>();
+            DocumentReference docRef = _db.Collection("Customers").Document(id);
+            DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
 
-            return Ok(user.Notifications);
+            if (!snapshot.Exists)
+            {
+                return NotFound();
+            }
+
+            Customer customer = snapshot.ConvertTo<Customer>();
+            return Ok(customer);
         }
 
-        [HttpPost("notifications/{userId}")]
-        public async Task<IActionResult> AddNotification(string userId, Notification notification)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(string id, Customer customer)
         {
-            await _client
-                .Child("Users")
-                .Child(userId)
-                .Child("Notifications")
-                .PostAsync(notification);
-
-            return Ok();
+            DocumentReference docRef = _db.Collection("Customers").Document(id);
+            await docRef.SetAsync(customer, SetOptions.MergeAll);
+            return NoContent();
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            DocumentReference docRef = _db.Collection("Customers").Document(id);
+            await docRef.DeleteAsync();
+            return NoContent();
+        }
+
+        [HttpPost("users/{userId}/notifications")]
+        public async Task<IActionResult> AddNotification(string id, Notification notification)
+        {
+            // Fetch the user's document reference
+            DocumentReference docRef = _db.Collection("Customers").Document(id);
+
+            // Fetch the user's data
+            DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
+
+            if (!snapshot.Exists)
+            {
+                return NotFound("User not found");
+            }
+
+            // Add the new notification to the user's Notifications list
+            Dictionary<string, object> updates = new Dictionary<string, object>
+                {
+                    { "Notifications", FieldValue.ArrayUnion(notification) }
+                };
+
+            // Update the user document with the new Notifications list
+            await docRef.UpdateAsync(updates);
+
+            return Ok(notification);
+        }
+
     }
 }
