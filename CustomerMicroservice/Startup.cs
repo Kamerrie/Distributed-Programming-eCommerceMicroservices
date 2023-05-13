@@ -9,17 +9,20 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System.IO;
 
 namespace CustomerMicroservice
 {
     public class Startup
     {
+        static string relativePath = "..\\distributed-programming-386414-26a5c9259d10.json";
+        static string currentDirectory = Directory.GetCurrentDirectory();
+        string filePath = Path.Combine(currentDirectory, relativePath);
         public Startup(IConfiguration configuration)
         {
+            
             Configuration = configuration;
-
-            string credential_path = @"C:\Users\KatherineAttard\source\repos\eCommerceMicroservices\distributed-programming-386414-26a5c9259d10.json";
-            System.Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credential_path);
+            System.Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", filePath);
 
 
         }
@@ -43,7 +46,7 @@ namespace CustomerMicroservice
                     options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
                 });
             // Add Firestore service
-            GoogleCredential googleCredential = GoogleCredential.FromFile("C:\\Users\\KatherineAttard\\source\\repos\\eCommerceMicroservices\\distributed-programming-386414-26a5c9259d10.json");
+            GoogleCredential googleCredential = GoogleCredential.FromFile(filePath);
 
             string projectId = Configuration["projectid"].ToString();
             FirestoreDb firestoreDb = FirestoreDb.Create(projectId);
