@@ -20,7 +20,8 @@ namespace OrderMicroservice
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>()
+                    .UseUrls("http://*:" + Environment.GetEnvironmentVariable("PORT"));
                 });
     }
 }

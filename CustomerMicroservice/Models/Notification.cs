@@ -1,4 +1,5 @@
 ﻿using Google.Cloud.Firestore;
+using System;
 
 namespace CustomerMicroservice.Models
 {
@@ -6,12 +7,12 @@ namespace CustomerMicroservice.Models
     public class Notification
     {
         [FirestoreProperty]
-        public string NotificationId { get; set; }
+        public string NotificationId { get; set; } = Guid.NewGuid().ToString();
 
         [FirestoreProperty]
         public string Message { get; set; }
 
         [FirestoreProperty]
-        public bool IsRead { get; set; }
+        public DateTime DateTimeUtc { get; set; } = DateTime.UtcNow;
     }
 }

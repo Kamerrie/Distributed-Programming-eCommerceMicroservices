@@ -19,7 +19,7 @@ namespace ProductCatalogueMicroservice
 {
     public class Startup
     {
-        static string relativePath = "\\distributed-programming-386414-26a5c9259d10.json";
+        static string relativePath = "distributed-programming-386414-26a5c9259d10.json";
         static string currentDirectory = Directory.GetCurrentDirectory();
         string filePath = Path.Combine(currentDirectory, relativePath);
         public Startup(IConfiguration configuration)
@@ -59,7 +59,7 @@ namespace ProductCatalogueMicroservice
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 

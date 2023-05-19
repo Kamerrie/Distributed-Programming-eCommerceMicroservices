@@ -75,11 +75,11 @@ namespace CustomerMicroservice.Controllers
             return NoContent();
         }
 
-        [HttpPost("users/{userId}/notifications")]
-        public async Task<IActionResult> AddNotification(string id, Notification notification)
+        [HttpPost("users/{customerId}/notifications")]
+        public async Task<IActionResult> AddNotification(string customerId, Notification notification)
         {
             // Fetch the user's document reference
-            DocumentReference docRef = _db.Collection("Customers").Document(id);
+            DocumentReference docRef = _db.Collection("Customers").Document(customerId);
 
             // Fetch the user's data
             DocumentSnapshot snapshot = await docRef.GetSnapshotAsync();
