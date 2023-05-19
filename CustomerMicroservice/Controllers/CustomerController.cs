@@ -29,13 +29,11 @@ namespace CustomerMicroservice.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Customer customer)
         {
-            // Query the Firestore database for a User document where 'Email' equals 'loginUser.Email' and 'Password' equals 'loginUser.Password'
             Query query = _db.Collection("Customers")
                 .WhereEqualTo("Email", customer.Email)
                 .WhereEqualTo("Password", customer.Password);
             QuerySnapshot querySnapshot = await query.GetSnapshotAsync();
 
-            // If the snapshot contains any documents, that means a User with the provided email and password was found
             if (querySnapshot.Count > 0)
             {
                 return Ok(true);
