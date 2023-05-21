@@ -46,7 +46,7 @@ namespace ProductCatalogueMicroservice.Controllers
             // Add each product to Firestore
             foreach (var product in productsData.Results)
             {
-                var docRef = _db.Collection("products").Document();
+                var docRef = _db.Collection("products").Document(product.ProductId);
                 await docRef.SetAsync(product);
             }
 

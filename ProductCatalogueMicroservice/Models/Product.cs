@@ -1,10 +1,13 @@
 ﻿using Google.Cloud.Firestore;
+using System;
 
 namespace ProductCatalogueMicroservice.Models
 {
     [FirestoreData]
     public class Product
     {
+        [FirestoreProperty]
+        public string ProductId { get; set; } = Guid.NewGuid().ToString();
         [FirestoreProperty]
         public string Type { get; set; }
 
