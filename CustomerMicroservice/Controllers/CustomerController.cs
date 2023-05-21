@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CustomerMicroservice.Models;
 using Grpc.Auth;
 using System.Collections.Generic;
+using System;
 
 namespace CustomerMicroservice.Controllers
 {
@@ -21,9 +22,10 @@ namespace CustomerMicroservice.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Customer customer)
         {
+            customer.CustomerId = Guid.NewGuid().ToString();
             DocumentReference docRef = _db.Collection("Customers").Document(customer.CustomerId);
             await docRef.SetAsync(customer);
-            return Ok();
+            return Ok(customer.CustomerId.ToString());
         }
 
         [HttpPost("login")]
@@ -36,7 +38,7 @@ namespace CustomerMicroservice.Controllers
 
             if (querySnapshot.Count > 0)
             {
-                return Ok(true);
+                return Ok(querySnapshot.Documents[0].Id.ToString());
             }
 
             // If no documents were found, return false

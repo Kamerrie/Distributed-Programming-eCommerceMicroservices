@@ -10,8 +10,7 @@ namespace CustomerMicroservice.Models
     public class Customer
     {
         [FirestoreProperty]
-        [Required]
-        public string CustomerId { get; set; } = Guid.NewGuid().ToString();
+        public string CustomerId { get; set; }
 
         [FirestoreProperty]
         public string Email { get; set; }
